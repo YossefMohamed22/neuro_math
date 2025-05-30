@@ -1,0 +1,2 @@
+D:/Done Project part 1/neuro_math/android/app/.cxx/Debug/1m2t326w/x86/CMakeFiles/edit_cache.dir
+D:/Done Project part 1/neuro_math/android/app/.cxx/Debug/1m2t326w/x86/CMakeFiles/rebuild_cache.dir
