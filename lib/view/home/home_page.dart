@@ -1,6 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // Import the new competitions page
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:neuro_math/view/home/home_logic.dart';
 import 'package:neuro_math/view/multi_operation_page/multi_operations_page.dart';
 
@@ -19,49 +23,69 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   File? _imageFile;
   final HomeLogic logic = HomeLogic();
+  String studentName = "أحمد";
 
-  // Placeholder for student name - replace with actual data retrieval later
-  String studentName = "أحمد"; // Example Name
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedImage();
+  }
+
+  Future<void> _loadSavedImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagePath = prefs.getString('saved_image_path');
+
+    if (imagePath != null && File(imagePath).existsSync()) {
+      setState(() {
+        _imageFile = File(imagePath);
+      });
+    }
+  }
 
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName = basename(pickedFile.path);
+      final savedImage =
+          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_image_path', savedImage.path);
+
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = savedImage;
       });
-      // TODO: Add logic to upload/save the picked image
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final safeAreaPadding = MediaQuery.of(context).padding;
 
-    // Define items for the grid
     final List<Map<String, dynamic>> items = [
       {
-        'icon': Icons.calculate, // Placeholder
+        'icon': Icons.calculate,
         'label': 'جمع وطرح',
         'page': const Marathon(),
         'asset': 'assets/plus-minus.png'
       },
       {
-        'icon': Icons.close, // Placeholder
+        'icon': Icons.close,
         'label': 'ضرب',
         'page': const Multiplied(),
         'asset': 'assets/multiplication.png'
       },
       {
-        'icon': Icons.percent, // Placeholder
+        'icon': Icons.percent,
         'label': 'قسمة',
         'page': const Divided(),
         'asset': 'assets/division.png'
       },
       {
-        'icon': Icons.functions, // Placeholder
+        'icon': Icons.functions,
         'label': 'متعدد',
         'page': const MultiOperationsPage(),
         'asset': 'assets/math.png'
@@ -80,18 +104,15 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              // Top bar with student data icon and competitions button
               Padding(
                 padding: const EdgeInsets.only(
                     top: 15.0, right: 16.0, left: 16.0, bottom: 10.0),
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween, // Space between buttons
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Competitions Button (New)
                     _buildTopBarButton(
                       context,
-                      icon: Icons.emoji_events_outlined, // Trophy icon
+                      icon: Icons.emoji_events_outlined,
                       label: "المسابقات",
                       onTap: () {
                         Navigator.push(
@@ -101,19 +122,17 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    // Student Data Button
                     _buildTopBarButton(
                       context,
                       icon: Icons.person_outline,
                       onTap: () {
                         logic.showStudentDataBottomSheet(context);
                       },
-                      isCircle: true, // Make this one circular
+                      isCircle: true,
                     ),
                   ],
                 ),
               ),
-              // Profile Section
               Expanded(
                 flex: 3,
                 child: Column(
@@ -142,19 +161,20 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "Hi, $studentName",
                       style: TextStyle(
-                          fontSize: screenSize.width * 0.07,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                                blurRadius: 3.0,
-                                color: Colors.black.withOpacity(0.3),
-                                offset: Offset(1, 1))
-                          ]),
+                        fontSize: screenSize.width * 0.07,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                              blurRadius: 3.0,
+                              color: Colors.black.withOpacity(0.3),
+                              offset: Offset(1, 1))
+                        ],
+                      ),
                     ),
                     SizedBox(height: screenSize.height * 0.01),
                     Text(
-                      "Choose the type of calculation", // Consider translating
+                      "Choose the type of calculation",
                       style: TextStyle(
                           fontSize: screenSize.width * 0.045,
                           color: Colors.white70),
@@ -162,7 +182,6 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              // Grid Section
               Expanded(
                 flex: 4,
                 child: Padding(
@@ -198,7 +217,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper widget for top bar buttons (Competitions and Student Data)
   Widget _buildTopBarButton(BuildContext context,
       {required IconData icon,
       String? label,
@@ -206,32 +224,26 @@ class _HomePageState extends State<HomePage> {
       bool isCircle = false}) {
     return Material(
       color: Colors.white.withOpacity(0.8),
-      borderRadius: BorderRadius.circular(
-          isCircle ? 25 : 15), // Different radius for circle/rectangle
+      borderRadius: BorderRadius.circular(isCircle ? 25 : 15),
       child: InkWell(
         borderRadius: BorderRadius.circular(isCircle ? 25 : 15),
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: label != null ? 16.0 : 10.0,
-              vertical: 10.0), // Adjust padding
+              horizontal: label != null ? 16.0 : 10.0, vertical: 10.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon,
-                  color: Colors.blueGrey.shade700,
-                  size: 24), // Slightly smaller icon
+              Icon(icon, color: Colors.blueGrey.shade700, size: 24),
               if (label != null)
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 8.0), // Space between icon and text
+                  padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: Colors.blueGrey.shade800,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14, // Adjust font size
-                    ),
+                        color: Colors.blueGrey.shade800,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14),
                   ),
                 ),
             ],
@@ -241,44 +253,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Updated grid button widget
   Widget _buildGridButton(BuildContext context, IconData icon, String label,
       Widget page, String assetPath) {
     return Card(
       elevation: 8,
       shadowColor: Colors.black.withOpacity(0.4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
       child: InkWell(
         borderRadius: BorderRadius.circular(20.0),
         onTap: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
+              context, MaterialPageRoute(builder: (context) => page));
         },
         child: Container(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset(
-                assetPath,
-                height: 50,
-                color: Colors.blueGrey.shade700,
-              ),
+              Image.asset(assetPath,
+                  height: 50, color: Colors.blueGrey.shade700),
               const SizedBox(height: 15),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blueGrey.shade800,
-                ),
-              ),
+              Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blueGrey.shade800)),
             ],
           ),
         ),
