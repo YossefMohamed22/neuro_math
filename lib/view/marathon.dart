@@ -9,10 +9,16 @@ class Marathon extends StatefulWidget {
   State<Marathon> createState() => _MarathonState();
 }
 
+// Represents a single number in the vertical list
+class QuestionItem {
+  final int number;
+  final bool isNegative; // True if subtraction, false if addition
+
+  QuestionItem({required this.number, required this.isNegative});
+}
+
 class _MarathonState extends State<Marathon> {
-  int num1 = 0;
-  int num2 = 0;
-  String operation = "+";
+  List<QuestionItem> questionItems = []; // List to hold vertical numbers
   String answer = "";
   int counter = 3;
   bool showTimer = true;
@@ -33,7 +39,7 @@ class _MarathonState extends State<Marathon> {
   @override
   void initState() {
     super.initState();
-    generateQuestion();
+    generateVerticalQuestion();
     startTimer();
   }
 
@@ -78,32 +84,54 @@ class _MarathonState extends State<Marathon> {
     });
   }
 
-  void generateQuestion() {
-    num1 = Random().nextInt(10);
-    num2 = Random().nextInt(10);
-    List<String> operations = ["+", "-"];
-    operation = operations[Random().nextInt(operations.length)];
-    if (operation == "-" && num1 < num2) {
-      int temp = num1;
-      num1 = num2;
-      num2 = temp;
+  // Generate a vertical question with 2 to 10 items
+  void generateVerticalQuestion() {
+    questionItems.clear();
+    // Generate random number of items for actual use
+    int numberOfItems = Random().nextInt(9) + 2; // 2 to 10 items
+    // int numberOfItems = 10; // Force 10 items for testing layout
+    // int numberOfItems = 2; // Force 2 items for testing layout
+    int currentSum = 0;
+
+    for (int i = 0; i < numberOfItems; i++) {
+      int number = Random().nextInt(10) + 1; // Numbers from 1 to 10
+      bool isNegative = Random().nextBool();
+
+      // Ensure the first number is positive for simplicity
+      if (i == 0) {
+        isNegative = false;
+      }
+      // Optional: Add logic to prevent sum going too negative if desired
+
+      questionItems.add(QuestionItem(number: number, isNegative: isNegative));
+      currentSum += (isNegative ? -number : number);
     }
+
+    // Ensure the final sum is reasonable (e.g., not excessively large or small)
+    // This basic version doesn't constrain the sum, might need refinement
+
     answer = "";
   }
 
-  int calculateAnswer() {
-    return operation == "+" ? num1 + num2 : num1 - num2;
+  // Calculate the answer for the vertical list
+  int calculateVerticalAnswer() {
+    int sum = 0;
+    for (var item in questionItems) {
+      sum += (item.isNegative ? -item.number : item.number);
+    }
+    return sum;
   }
 
   void checkAnswer() {
     if (answer.isEmpty) return;
-    if (int.tryParse(answer) == calculateAnswer()) {
+    // Allow negative sign as valid input for comparison
+    if (int.tryParse(answer) == calculateVerticalAnswer()) {
       correctAnswers++;
     } else {
       wrongAnswers++;
     }
     setState(() {
-      generateQuestion();
+      generateVerticalQuestion();
     });
   }
 
@@ -135,7 +163,7 @@ class _MarathonState extends State<Marathon> {
               "النتيجة النهائية",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700, // Adjusted title color
+                color: Colors.grey.shade700,
               ),
             ),
           ),
@@ -153,7 +181,7 @@ class _MarathonState extends State<Marathon> {
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: gradientEndColor, // Use consistent color
+                backgroundColor: gradientEndColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
@@ -161,7 +189,7 @@ class _MarathonState extends State<Marathon> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pop(context);
+                Navigator.pop(context); // Go back from marathon page
               },
               child: const Text("حسناً", style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
@@ -197,46 +225,36 @@ class _MarathonState extends State<Marathon> {
     );
   }
 
-  Widget buildNumberButton(String number, {Color? buttonColor, Color? textColor, IconData? icon, Function()? onTap}) {
-    // Determine colors based on button type
-    Color bgColor = Colors.white;
-    Color fgColor = keypadTextColor;
-    IconData? btnIcon;
+  // Updated Button Builder
+  Widget buildKeypadButton(String text, {IconData? icon, Function()? onTap, Color? bgColor, Color? fgColor}) {
+    Color buttonColor = bgColor ?? Colors.white;
+    Color textColor = fgColor ?? keypadTextColor;
+    Widget child;
 
-    if (icon == Icons.backspace_outlined) {
-      bgColor = backspaceButtonColor;
-      fgColor = Colors.white;
-      btnIcon = Icons.arrow_back; // Use simple back arrow
-    } else if (icon == Icons.check) { // Changed icon check
-      bgColor = checkButtonColor;
-      fgColor = Colors.white;
-      btnIcon = Icons.check;
-    } else if (buttonColor != null) {
-      bgColor = buttonColor;
-    }
-
-    if (textColor != null) {
-      fgColor = textColor;
+    if (icon != null) {
+      child = Icon(icon, color: textColor, size: 28); // Slightly larger icon size
+    } else {
+      child = Text(
+        text,
+        style: TextStyle(
+          fontSize: 28, // Slightly larger font size
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      );
     }
 
     return InkWell(
-      onTap: onTap ?? () {
-        // Optimize button press response time by removing setState delay
-        if (answer.length < 6) {
-          setState(() {
-            answer += number;
-          });
-        }
-      },
-      borderRadius: BorderRadius.circular(18.0), // Slightly more rounded corners like image
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18.0),
       child: Container(
         margin: const EdgeInsets.all(4.0),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(18.0), // Slightly more rounded corners like image
+          color: buttonColor,
+          borderRadius: BorderRadius.circular(18.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.15), // Adjusted shadow
+              color: Colors.grey.withOpacity(0.15),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 3),
@@ -244,36 +262,70 @@ class _MarathonState extends State<Marathon> {
           ],
         ),
         alignment: Alignment.center,
-        child: btnIcon != null
-            ? Icon(btnIcon, color: fgColor, size: 26) // Adjusted icon size
-            : Text(
-                number,
-                style: TextStyle(
-                  fontSize: 26, // Adjusted font size
-                  fontWeight: FontWeight.w500, // Adjusted font weight
-                  color: fgColor,
-                ),
-              ),
+        child: child,
       ),
     );
+  }
+
+  // Function to calculate dynamic font size based on number of items
+  double _calculateDynamicFontSize(int numItems, double screenWidth) {
+    // Define max/min multipliers relative to screen width
+    const double maxMultiplier = 0.09; // For 2 items
+    const double minMultiplier = 0.06; // For 10 items
+    // Define absolute min/max font sizes
+    const double absoluteMinSize = 22.0;
+    const double absoluteMaxSize = 40.0;
+
+    // Clamp number of items between 2 and 10
+    int clampedNumItems = numItems.clamp(2, 10);
+
+    // Calculate scale factor (0 for 2 items, 1 for 10 items)
+    double scaleFactor = (clampedNumItems - 2) / (10 - 2);
+
+    // Interpolate the multiplier
+    double currentMultiplier = maxMultiplier - (maxMultiplier - minMultiplier) * scaleFactor;
+
+    // Calculate font size based on screen width and multiplier
+    double calculatedSize = screenWidth * currentMultiplier;
+
+    // Clamp the final size between absolute min and max
+    return calculatedSize.clamp(absoluteMinSize, absoluteMaxSize);
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final safeAreaPadding = MediaQuery.of(context).padding;
+
+    // --- Layout Adjustments --- 
+    // Calculate dynamic font size based on current number of items
+    double questionFontSize = _calculateDynamicFontSize(questionItems.length, screenSize.width);
+
+    // Calculate dynamic line height based on font size
+    double questionLineHeight = 1.4 - (questionFontSize - 22) * 0.01; // Example: taller for smaller fonts
+    questionLineHeight = questionLineHeight.clamp(1.1, 1.4); // Clamp line height
+
+    final questionTextStyle = TextStyle(
+      fontSize: questionFontSize, 
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+      height: questionLineHeight, // Use dynamic line height
+      shadows: [Shadow(blurRadius: 1, color: Colors.black.withOpacity(0.15), offset: Offset(1,1))]
+    );
+
+    // Calculate available height for keypad (remains similar)
+    double topBarHeight = 55 + safeAreaPadding.top + 20; // Approx height of top bar + padding
+    double questionSectionHeightEstimate = screenSize.height * 0.5; // Give more space to question area
+    double keypadAvailableHeight = screenSize.height - topBarHeight - questionSectionHeightEstimate - safeAreaPadding.bottom;
+    if (keypadAvailableHeight < screenSize.height * 0.3) keypadAvailableHeight = screenSize.height * 0.3;
     
-    // Adjust flex ratio to raise number pad
-    final questionAreaFlex = 2; // Reduced from 3 to 2
-    final keypadAreaFlex = 5; // Increased from 4 to 5
-    
-    // Calculate aspect ratio for keypad buttons
-    double keypadAspectRatio = (screenSize.width / 3) / (screenSize.height * 0.1);
-    double topSectionHeight = screenSize.height * 0.3; // Reduced from 0.4 to 0.3
-    double keypadAvailableHeight = screenSize.height - topSectionHeight - safeAreaPadding.top - safeAreaPadding.bottom - 20;
-    keypadAspectRatio = (screenSize.width / 3) / (keypadAvailableHeight / 4);
+    double keypadButtonHeight = (keypadAvailableHeight / 4) - 12; // 4 rows, adjust spacing
+    double keypadButtonWidth = (screenSize.width - 40 - 20) / 3; // width - horizontal padding - grid spacing
+    double keypadAspectRatio = (keypadButtonWidth > 0 && keypadButtonHeight > 0) ? keypadButtonWidth / keypadButtonHeight : 1.2; // Default aspect ratio
+    // --- End Layout Adjustments ---
 
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent keyboard overlap issues
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -299,31 +351,30 @@ class _MarathonState extends State<Marathon> {
               if (!showTimer)
                 Column(
                   children: [
-                    // Top Bar (Timer and Close Button)
+                    // Top Bar (Timer and Close Button) - Remains at the top
                     Padding(
                       padding: EdgeInsets.only(
-                        top: safeAreaPadding.top + 10, // Reduced from 15 to 10
+                        top: safeAreaPadding.top + 10,
                         left: 25,
                         right: 25,
-                        bottom: 10, // Reduced from 15 to 10
+                        bottom: 5, // Reduced bottom padding
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Timer
                           SizedBox(
-                            width: 55, height: 55, // Slightly larger timer
+                            width: 55, height: 55,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
                                 CircularProgressIndicator(
-                                  value: 1.0, // Static background track
-                                  strokeWidth: 6, // Thicker track
-                                  color: Colors.white.withOpacity(0.2), // Fainter background
-                                ), 
+                                  value: 1.0,
+                                  strokeWidth: 6,
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
                                 CircularProgressIndicator(
                                   value: totalTime / 60,
-                                  strokeWidth: 6, // Thicker progress arc
+                                  strokeWidth: 6,
                                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
                                 Text(
@@ -337,63 +388,69 @@ class _MarathonState extends State<Marathon> {
                               ],
                             ),
                           ),
-                          // Close Button
                           InkWell(
                             onTap: () {
                               showResultDialog();
                             },
-                            borderRadius: BorderRadius.circular(25), // More rounded
+                            borderRadius: BorderRadius.circular(25),
                             child: Container(
-                              padding: const EdgeInsets.all(10), // Adjusted padding
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25), // Adjusted opacity
+                                color: Colors.white.withOpacity(0.25),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 26), // Adjusted size
+                              child: const Icon(Icons.close, color: Colors.white, size: 26),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    // Question Area
+                    // Question & Answer Area - Takes remaining space above keypad
                     Expanded(
-                      flex: questionAreaFlex, // Reduced flex to make room for keypad
                       child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        alignment: Alignment.topCenter, // Align content to the top center
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 0), // Removed vertical padding
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min, // Take minimum space needed
                           children: [
-                            Text(
-                              "$num1 $operation $num2",
-                              style: TextStyle(
-                                fontSize: screenSize.width * 0.13, // Slightly larger font
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [Shadow(blurRadius: 1, color: Colors.black.withOpacity(0.15), offset: Offset(1,1))]
-                              ),
-                              textAlign: TextAlign.center,
+                            // Vertical list of numbers - Starts right below top bar
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: questionItems.map((item) {
+                                String displayValue = item.isNegative
+                                    ? "-${item.number}"
+                                    : item.number.toString();
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 0.5), // Further reduce vertical padding
+                                  child: Text(
+                                    displayValue,
+                                    style: questionTextStyle, // Use dynamic text style
+                                    textAlign: TextAlign.center,
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                            const SizedBox(height: 15), // Reduced from 20 to 15
+                            const SizedBox(height: 10), // Reduced space before line
                             // Container for the line and answer
                             Container(
-                              constraints: BoxConstraints(maxWidth: screenSize.width * 0.5), // Adjusted width
+                              constraints: BoxConstraints(maxWidth: screenSize.width * 0.6), // Limit width
                               child: Column(
                                 children: [
-                                  // Line only
+                                  // Ensure line is always visible
                                   Container(
-                                    height: 1.5, // Line thickness
+                                    height: 2.0, // Make line slightly thicker
                                     color: Colors.white.withOpacity(0.9),
+                                    margin: const EdgeInsets.only(bottom: 10.0), // Reduced margin below line
                                   ),
-                                  const SizedBox(height: 10), // Space between line and answer
-                                  // Answer below the line
+                                  // Answer Text
                                   Text(
-                                    answer.isEmpty ? " " : answer, // Show space if empty for height consistency
+                                    answer.isEmpty ? " " : answer,
                                     style: TextStyle(
-                                      fontSize: screenSize.width * 0.1, 
+                                      // Make answer font size relative to question font size
+                                      fontSize: questionFontSize * 1.1, 
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
-                                      letterSpacing: 3, // Add letter spacing if needed
+                                      letterSpacing: 3,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -404,43 +461,58 @@ class _MarathonState extends State<Marathon> {
                         ),
                       ),
                     ),
-                    // Keypad Area
-                    Expanded(
-                      flex: keypadAreaFlex, // Increased flex to make keypad taller
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Reduced vertical padding from 15 to 10
-                        decoration: BoxDecoration(
-                           color: Colors.white, // Solid white background
-                           borderRadius: const BorderRadius.only(
-                             topLeft: Radius.circular(35),
-                             topRight: Radius.circular(35),
-                           ),
-                        ),
-                        child: GridView.count(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          crossAxisCount: 3,
-                          childAspectRatio: keypadAspectRatio, 
-                          mainAxisSpacing: 10, // Increased spacing
-                          crossAxisSpacing: 10, // Increased spacing
-                          padding: const EdgeInsets.all(10), // Reduced padding from 15 to 10
-                          children: [
-                            ...List.generate(9, (index) {
-                              return buildNumberButton("${index + 1}");
-                            }),
-                            buildNumberButton(
-                              "",
-                              icon: Icons.backspace_outlined,
-                              onTap: deleteLastDigit,
-                            ),
-                            buildNumberButton("0"),
-                            buildNumberButton(
-                              "",
-                              icon: Icons.check,
-                              onTap: checkAnswer,
-                            ),
-                          ],
-                        ),
+                    // Keypad Area - Fixed height at the bottom
+                    Container(
+                      height: keypadAvailableHeight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      decoration: BoxDecoration(
+                         color: Colors.white,
+                         borderRadius: const BorderRadius.only(
+                           topLeft: Radius.circular(35),
+                           topRight: Radius.circular(35),
+                         ),
+                      ),
+                      child: GridView.count(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        crossAxisCount: 3,
+                        childAspectRatio: keypadAspectRatio,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        padding: const EdgeInsets.all(10),
+                        children: [
+                          // Numbers 1-9
+                          ...List.generate(9, (index) {
+                            return buildKeypadButton("${index + 1}", onTap: () {
+                                if (answer.length < 6) {
+                                  setState(() { answer += "${index + 1}"; });
+                                }
+                              });
+                          }),
+                          // Row 4: Backspace, 0, Checkmark
+                          // Backspace Button (Left)
+                          buildKeypadButton(
+                            "",
+                            icon: Icons.arrow_back, // Use back arrow icon
+                            onTap: deleteLastDigit,
+                            bgColor: backspaceButtonColor,
+                            fgColor: Colors.white,
+                          ),
+                          // Number 0 (Center)
+                          buildKeypadButton("0", onTap: () {
+                             if (answer.length < 6) {
+                               setState(() { answer += "0"; });
+                             }
+                           }),
+                          // Checkmark Button (Right)
+                          buildKeypadButton(
+                            "",
+                            icon: Icons.check,
+                            onTap: checkAnswer,
+                            bgColor: checkButtonColor,
+                            fgColor: Colors.white,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -452,3 +524,4 @@ class _MarathonState extends State<Marathon> {
     );
   }
 }
+

@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart'; // Import the new competitions page
 import 'package:neuro_math/view/home/home_logic.dart';
 import 'package:neuro_math/view/multi_operation_page/multi_operations_page.dart';
 
+import '../competitions_page.dart';
 import '../divided.dart';
 import '../marathon.dart';
 import '../multiplied.dart';
-// Removed Sprint import as it was commented out
-// import '../sprint_page/sprint.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,13 +40,13 @@ class _HomePageState extends State<HomePage> {
     final screenSize = MediaQuery.of(context).size;
     final safeAreaPadding = MediaQuery.of(context).padding;
 
-    // Define items with labels for the new button design
+    // Define items for the grid
     final List<Map<String, dynamic>> items = [
       {
-        'icon': Icons.calculate, // Placeholder, replace with actual asset or specific icon
+        'icon': Icons.calculate, // Placeholder
         'label': 'جمع وطرح',
         'page': const Marathon(),
-        'asset': 'assets/plus-minus.png' // Keep asset path if needed
+        'asset': 'assets/plus-minus.png'
       },
       {
         'icon': Icons.close, // Placeholder
@@ -56,7 +55,7 @@ class _HomePageState extends State<HomePage> {
         'asset': 'assets/multiplication.png'
       },
       {
-        'icon': Icons.percent, // Placeholder, division symbol often uses % or custom icon
+        'icon': Icons.percent, // Placeholder
         'label': 'قسمة',
         'page': const Divided(),
         'asset': 'assets/division.png'
@@ -70,7 +69,6 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      // Apply the gradient background
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -82,43 +80,54 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              // Top bar with student data icon
+              // Top bar with student data icon and competitions button
               Padding(
-                padding: const EdgeInsets.only(top: 10.0, right: 16.0, left: 16.0),
+                padding: const EdgeInsets.only(
+                    top: 15.0, right: 16.0, left: 16.0, bottom: 10.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween, // Space between buttons
                   children: [
-                    Material(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          logic.showStudentDataBottomSheet(context);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(Icons.person_outline, color: Colors.blueGrey.shade700, size: 28),
-                        ),
-                      ),
+                    // Competitions Button (New)
+                    _buildTopBarButton(
+                      context,
+                      icon: Icons.emoji_events_outlined, // Trophy icon
+                      label: "المسابقات",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const CompetitionsPage()),
+                        );
+                      },
+                    ),
+                    // Student Data Button
+                    _buildTopBarButton(
+                      context,
+                      icon: Icons.person_outline,
+                      onTap: () {
+                        logic.showStudentDataBottomSheet(context);
+                      },
+                      isCircle: true, // Make this one circular
                     ),
                   ],
                 ),
               ),
               // Profile Section
               Expanded(
-                flex: 3, // Adjust flex for better spacing
+                flex: 3,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
                       onTap: _pickImage,
                       child: CircleAvatar(
-                        radius: screenSize.width * 0.15, // Slightly larger avatar
+                        radius: screenSize.width * 0.15,
                         backgroundColor: Colors.white.withOpacity(0.8),
                         backgroundImage: _imageFile != null
                             ? FileImage(_imageFile!)
-                            : const AssetImage('assets/login-avatar_12123009.png') // Use a default avatar if needed
+                            : const AssetImage(
+                                    'assets/login-avatar_12123009.png')
                                 as ImageProvider,
                         child: _imageFile == null
                             ? Icon(
@@ -131,27 +140,34 @@ class _HomePageState extends State<HomePage> {
                     ),
                     SizedBox(height: screenSize.height * 0.02),
                     Text(
-                      "Hi, $studentName", // Use student name variable
+                      "Hi, $studentName",
                       style: TextStyle(
-                        fontSize: screenSize.width * 0.07,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [Shadow(blurRadius: 3.0, color: Colors.black.withOpacity(0.3), offset: Offset(1, 1))]
-                      ),
+                          fontSize: screenSize.width * 0.07,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                                blurRadius: 3.0,
+                                color: Colors.black.withOpacity(0.3),
+                                offset: Offset(1, 1))
+                          ]),
                     ),
                     SizedBox(height: screenSize.height * 0.01),
                     Text(
-                      "Choose the type of calculation",
-                      style: TextStyle(fontSize: screenSize.width * 0.045, color: Colors.white70),
+                      "Choose the type of calculation", // Consider translating
+                      style: TextStyle(
+                          fontSize: screenSize.width * 0.045,
+                          color: Colors.white70),
                     ),
                   ],
                 ),
               ),
               // Grid Section
               Expanded(
-                flex: 4, // Adjust flex
+                flex: 4,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05), // Add horizontal padding
+                  padding:
+                      EdgeInsets.symmetric(horizontal: screenSize.width * 0.05),
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
@@ -159,22 +175,22 @@ class _HomePageState extends State<HomePage> {
                       crossAxisCount: 2,
                       mainAxisSpacing: screenSize.height * 0.02,
                       crossAxisSpacing: screenSize.width * 0.04,
-                      childAspectRatio: 1.0, // Make buttons square
+                      childAspectRatio: 1.0,
                     ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
-                      return _buildButton(
+                      return _buildGridButton(
                         context,
                         items[index]['icon'],
                         items[index]['label'],
                         items[index]['page'],
-                        items[index]['asset'], // Pass asset path
+                        items[index]['asset'],
                       );
                     },
                   ),
                 ),
               ),
-              const SizedBox(height: 20), // Add some bottom padding
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -182,13 +198,57 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Updated button widget
-  Widget _buildButton(BuildContext context, IconData icon, String label, Widget page, String assetPath) {
+  // Helper widget for top bar buttons (Competitions and Student Data)
+  Widget _buildTopBarButton(BuildContext context,
+      {required IconData icon,
+      String? label,
+      required Function() onTap,
+      bool isCircle = false}) {
+    return Material(
+      color: Colors.white.withOpacity(0.8),
+      borderRadius: BorderRadius.circular(
+          isCircle ? 25 : 15), // Different radius for circle/rectangle
+      child: InkWell(
+        borderRadius: BorderRadius.circular(isCircle ? 25 : 15),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+              horizontal: label != null ? 16.0 : 10.0,
+              vertical: 10.0), // Adjust padding
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon,
+                  color: Colors.blueGrey.shade700,
+                  size: 24), // Slightly smaller icon
+              if (label != null)
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 8.0), // Space between icon and text
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.blueGrey.shade800,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14, // Adjust font size
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Updated grid button widget
+  Widget _buildGridButton(BuildContext context, IconData icon, String label,
+      Widget page, String assetPath) {
     return Card(
-      elevation: 8, // Increased elevation for more shadow
+      elevation: 8,
       shadowColor: Colors.black.withOpacity(0.4),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0), // More rounded corners
+        borderRadius: BorderRadius.circular(20.0),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20.0),
@@ -204,13 +264,11 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Use Image.asset if specific assets are required, otherwise use Icon
               Image.asset(
                 assetPath,
-                height: 50, // Adjust size as needed
-                color: Colors.blueGrey.shade700, // Optional: color tint for consistency
+                height: 50,
+                color: Colors.blueGrey.shade700,
               ),
-              // Icon(icon, size: 50, color: Colors.blueGrey.shade700),
               const SizedBox(height: 15),
               Text(
                 label,
@@ -228,4 +286,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
