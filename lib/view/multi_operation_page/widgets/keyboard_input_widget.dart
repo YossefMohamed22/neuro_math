@@ -18,16 +18,6 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
   Timer? countdownTimer;
   int totalTime = 60;
 
-  // Define colors (consistent with other pages)
-  final Color backspaceIconColor =
-      const Color(0xFFF87070); // Coral red for icon
-  final Color checkIconColor = const Color(0xFF63C9A8); // Teal green for icon
-  final Color keypadTextColor = Colors.grey.shade800;
-  final Color buttonBackgroundColor = Colors.white;
-  final Color speedButtonIconColor = Colors.grey.shade600;
-  final Color closeButtonBackgroundColor = Colors.white.withOpacity(0.8);
-  final Color closeButtonIconColor = Colors.grey.shade700;
-
   @override
   void initState() {
     super.initState();
@@ -66,14 +56,24 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
       Color? iconColor,
       double? fontSize,
       double? iconSize,
-      Color? backgroundColor}) {
-    Color effectiveIconColor = iconColor ?? keypadTextColor;
-    Color effectiveBackgroundColor = backgroundColor ?? buttonBackgroundColor;
+      Color? backgroundColor,
+      Color? textColor}) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // Define colors based on theme
+    final Color defaultTextColor = isDarkMode ? Colors.white : Colors.grey.shade800;
+    final Color defaultIconColor = iconColor ?? defaultTextColor;
+    final Color defaultBackgroundColor = backgroundColor ?? (isDarkMode ? Colors.black : Colors.white);
+    
+    // Use provided colors or defaults
+    Color effectiveIconColor = iconColor ?? defaultIconColor;
+    Color effectiveBackgroundColor = backgroundColor ?? defaultBackgroundColor;
+    Color effectiveTextColor = textColor ?? defaultTextColor;
+    
     Widget child;
-    double effectiveFontSize =
-        fontSize ?? 24; // Slightly smaller default font size
-    double effectiveIconSize =
-        iconSize ?? 24; // Slightly smaller default icon size
+    double effectiveFontSize = fontSize ?? 24; // Slightly smaller default font size
+    double effectiveIconSize = iconSize ?? 24; // Slightly smaller default icon size
 
     if (icon != null) {
       child = Icon(icon, color: effectiveIconColor, size: effectiveIconSize);
@@ -83,7 +83,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
         style: TextStyle(
           fontSize: effectiveFontSize,
           fontWeight: FontWeight.w500,
-          color: keypadTextColor,
+          color: effectiveTextColor,
         ),
       );
     }
@@ -115,6 +115,21 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // Define colors based on theme
+    final Color backspaceIconColor = const Color(0xFFF87070); // Coral red for icon
+    final Color checkIconColor = const Color(0xFF63C9A8); // Teal green for icon
+    final Color keypadTextColor = isDarkMode ? Colors.white : Colors.grey.shade800;
+    final Color buttonBackgroundColor = isDarkMode ? Colors.black : Colors.white;
+    final Color speedButtonIconColor = isDarkMode ? Colors.white : Colors.grey.shade600;
+    final Color closeButtonBackgroundColor = isDarkMode ? Colors.black.withOpacity(0.8) : Colors.white.withOpacity(0.8);
+    final Color closeButtonIconColor = isDarkMode ? Colors.white : Colors.grey.shade700;
+    final Color containerBackgroundColor = isDarkMode ? Colors.black : Colors.white;
+    final Color timerTextColor = isDarkMode ? Colors.white : Colors.grey.shade800;
+    final Color dividerColor = isDarkMode ? Colors.white.withOpacity(0.3) : Colors.grey.withOpacity(0.3);
+    
     // Add slight padding around the entire right panel to show rounded corners
     return Padding(
       padding: const EdgeInsets.only(
@@ -127,7 +142,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
         borderRadius: BorderRadius.circular(15.0), // Apply rounded corners here
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white, // Solid white background
+            color: containerBackgroundColor, // Use theme-based background color
             borderRadius: BorderRadius.circular(15.0), // Apply rounded corners
           ),
           child: Stack(
@@ -191,7 +206,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                                 CircularProgressIndicator(
                                   value: 1.0,
                                   strokeWidth: 4,
-                                  color: Colors.grey.shade200,
+                                  color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200,
                                 ),
                                 CircularProgressIndicator(
                                   value: totalTime / 60,
@@ -206,7 +221,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                                   style: TextStyle(
                                     fontSize: 14, // Adjust size
                                     fontWeight: FontWeight.bold,
-                                    color: keypadTextColor,
+                                    color: timerTextColor,
                                   ),
                                 ),
                               ],
@@ -215,7 +230,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                         ),
                       ],
                     ),
-                    const Divider(height: 15, thickness: 1),
+                    Divider(height: 15, thickness: 1, color: dividerColor),
                     // Keypad Grid - Using Rows and Columns for precise layout
                     Expanded(
                       child: Column(
@@ -229,17 +244,24 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                               children: [
                                 buildKeypadButton("1",
                                     onTap: () =>
-                                        widget.logic.updateResult("1")),
+                                        widget.logic.updateResult("1"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("2",
                                     onTap: () =>
-                                        widget.logic.updateResult("2")),
+                                        widget.logic.updateResult("2"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("3",
                                     onTap: () =>
-                                        widget.logic.updateResult("3")),
+                                        widget.logic.updateResult("3"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("",
                                     icon: Icons.backspace_outlined,
                                     onTap: widget.logic.deleteLastDigit,
-                                    iconColor: backspaceIconColor),
+                                    iconColor: Colors.white,
+                                    backgroundColor: backspaceIconColor),
                               ],
                             ),
                           ),
@@ -250,17 +272,24 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                               children: [
                                 buildKeypadButton("4",
                                     onTap: () =>
-                                        widget.logic.updateResult("4")),
+                                        widget.logic.updateResult("4"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("5",
                                     onTap: () =>
-                                        widget.logic.updateResult("5")),
+                                        widget.logic.updateResult("5"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("6",
                                     onTap: () =>
-                                        widget.logic.updateResult("6")),
+                                        widget.logic.updateResult("6"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("",
                                     icon: Icons.check_circle_outline,
                                     onTap: widget.logic.checkAnswer,
-                                    iconColor: checkIconColor),
+                                    iconColor: Colors.white,
+                                    backgroundColor: checkIconColor),
                               ],
                             ),
                           ),
@@ -271,13 +300,19 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                               children: [
                                 buildKeypadButton("7",
                                     onTap: () =>
-                                        widget.logic.updateResult("7")),
+                                        widget.logic.updateResult("7"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("8",
                                     onTap: () =>
-                                        widget.logic.updateResult("8")),
+                                        widget.logic.updateResult("8"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 buildKeypadButton("9",
                                     onTap: () =>
-                                        widget.logic.updateResult("9")),
+                                        widget.logic.updateResult("9"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 BlocBuilder<UniversalCubit<int>,
                                     UniversalState<int>>(
                                   bloc: widget.logic.durationFastCubit,
@@ -286,7 +321,7 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                                         success: (data) => data,
                                         orElse: () => 1);
                                     Color speedButtonBgColor =
-                                        Colors.white; // Default white
+                                        isDarkMode ? Colors.black : Colors.white; // Default based on theme
                                     if (speed == 2) {
                                       speedButtonBgColor =
                                           Colors.yellow.shade600;
@@ -319,7 +354,9 @@ class _KeyboardInputWidgetState extends State<KeyboardInputWidget> {
                                 const Spacer(), // Placeholder
                                 buildKeypadButton("0",
                                     onTap: () =>
-                                        widget.logic.updateResult("0")),
+                                        widget.logic.updateResult("0"),
+                                    textColor: keypadTextColor,
+                                    backgroundColor: buttonBackgroundColor),
                                 const Spacer(), // Placeholder
                                 const Spacer(), // Placeholder
                               ],

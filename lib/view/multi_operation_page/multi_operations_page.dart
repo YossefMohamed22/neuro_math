@@ -1,6 +1,8 @@
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:neuro_math/core/theme/app_themes.dart'; // Import AppThemes for gradient
 import 'package:neuro_math/view/multi_operation_page/multi_operation_logic.dart';
 import 'package:neuro_math/view/multi_operation_page/widgets/keyboard_input_widget.dart';
 import 'package:neuro_math/view/multi_operation_page/widgets/vertical_ticker.dart';
@@ -18,9 +20,9 @@ class _MultiOperationsPageState extends State<MultiOperationsPage> {
   int _countdownValue = 3;
   Timer? _timer;
 
-  // Define gradient colors (same as other pages)
-  final Color gradientStartColor = const Color(0xFF6A82FB);
-  final Color gradientEndColor = const Color(0xFFB477F8);
+  // Colors will be derived from Theme
+  // final Color gradientStartColor = const Color(0xFF6A82FB);
+  // final Color gradientEndColor = const Color(0xFFB477F8);
 
   @override
   void initState() {
@@ -59,17 +61,20 @@ class _MultiOperationsPageState extends State<MultiOperationsPage> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    // logic.dispose(); // Dispose logic resources
+    // logic.dispose(); // Dispose logic resources if needed
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final gradients = theme.extension<AppGradients>()!;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [gradientStartColor, gradientEndColor],
+            colors: [gradients.start, gradients.end], // Use theme gradients
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -82,7 +87,7 @@ class _MultiOperationsPageState extends State<MultiOperationsPage> {
                     style: const TextStyle(
                       fontSize: 100,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.white, // Keep white for contrast on gradient
                       shadows: [
                         Shadow(
                           blurRadius: 10.0,
@@ -112,3 +117,4 @@ class _MultiOperationsPageState extends State<MultiOperationsPage> {
     );
   }
 }
+

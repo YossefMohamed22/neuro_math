@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:neuro_math/view/competitions_page.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:neuro_math/core/theme/app_themes.dart';
+import 'package:neuro_math/core/theme/theme_cubit.dart';
 import 'package:neuro_math/view/home/home_logic.dart';
 import 'package:neuro_math/view/multi_operation_page/multi_operations_page.dart';
 
-import '../competitions_page.dart';
 import '../divided.dart';
 import '../marathon.dart';
 import '../multiplied.dart';
@@ -23,47 +26,64 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   File? _imageFile;
   final HomeLogic logic = HomeLogic();
-  String studentName = "أحمد";
+  String studentName = "أحمد"; // Example Name - TODO: Replace with actual data
 
   @override
   void initState() {
     super.initState();
     _loadSavedImage();
+    // TODO: Load student name from appropriate source
   }
 
   Future<void> _loadSavedImage() async {
     final prefs = await SharedPreferences.getInstance();
     final imagePath = prefs.getString('saved_image_path');
 
-    if (imagePath != null && File(imagePath).existsSync()) {
-      setState(() {
-        _imageFile = File(imagePath);
-      });
+    if (imagePath != null) {
+      final file = File(imagePath);
+      if (await file.exists()) {
+        // Check if file exists before setting state
+        setState(() {
+          _imageFile = file;
+        });
+      }
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+    try {
+      final pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      final appDir = await getApplicationDocumentsDirectory();
-      final fileName = basename(pickedFile.path);
-      final savedImage =
-          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+      if (pickedFile != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = basename(pickedFile.path);
+        final savedImage =
+            await File(pickedFile.path).copy('${appDir.path}/$fileName');
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_image_path', savedImage.path);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('saved_image_path', savedImage.path);
 
-      setState(() {
-        _imageFile = savedImage;
-      });
+        setState(() {
+          _imageFile = savedImage;
+        });
+      }
+    } catch (e) {
+      // Handle potential errors during image picking/saving
+      print("Error picking/saving image: $e");
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+        const SnackBar(content: Text("حدث خطأ أثناء اختيار الصورة.")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    // Access gradient colors from theme extension
+    final gradients = theme.extension<AppGradients>()!;
 
     final List<Map<String, dynamic>> items = [
       {
@@ -93,10 +113,13 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
+      // Use theme background color
+      // backgroundColor: theme.colorScheme.background,
+      // Keep gradient for now as requested, but ideally theme controls this
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade200, Colors.purple.shade300],
+            colors: [gradients.start, gradients.end], // Use theme gradients
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -104,12 +127,14 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
+              // Top bar with Competitions, Theme Toggle, and Student Data
               Padding(
                 padding: const EdgeInsets.only(
                     top: 15.0, right: 16.0, left: 16.0, bottom: 10.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Competitions Button (Left)
                     _buildTopBarButton(
                       context,
                       icon: Icons.emoji_events_outlined,
@@ -122,17 +147,41 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    _buildTopBarButton(
-                      context,
-                      icon: Icons.person_outline,
-                      onTap: () {
-                        logic.showStudentDataBottomSheet(context);
-                      },
-                      isCircle: true,
+                    // Group for Right-side Buttons (Theme Toggle + Student)
+                    Row(
+                      children: [
+                        // Theme Toggle Button (New)
+                        _buildTopBarButton(
+                          context,
+                          // Choose icon based on current theme
+                          icon: isDarkMode
+                              ? Icons.light_mode_outlined
+                              : Icons.dark_mode_outlined,
+                          onTap: () {
+                            // Toggle theme using ThemeCubit
+                            context.read<ThemeCubit>().toggleTheme();
+                          },
+                          isCircle:
+                              true, // Make it circular like the student button
+                        ),
+                        const SizedBox(
+                            width:
+                                8), // Space between toggle and student button
+                        // Student Data Button (Right)
+                        _buildTopBarButton(
+                          context,
+                          icon: Icons.person_outline,
+                          onTap: () {
+                            logic.showStudentDataBottomSheet(context);
+                          },
+                          isCircle: true,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              // Profile Section
               Expanded(
                 flex: 3,
                 child: Column(
@@ -142,7 +191,9 @@ class _HomePageState extends State<HomePage> {
                       onTap: _pickImage,
                       child: CircleAvatar(
                         radius: screenSize.width * 0.15,
-                        backgroundColor: Colors.white.withOpacity(0.8),
+                        // Use theme surface color with opacity for background
+                        backgroundColor:
+                            theme.colorScheme.surface.withOpacity(0.8),
                         backgroundImage: _imageFile != null
                             ? FileImage(_imageFile!)
                             : const AssetImage(
@@ -152,7 +203,9 @@ class _HomePageState extends State<HomePage> {
                             ? Icon(
                                 Icons.camera_alt,
                                 size: screenSize.width * 0.1,
-                                color: Colors.grey.shade400,
+                                // Use a less prominent color from theme
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.5),
                               )
                             : null,
                       ),
@@ -163,25 +216,29 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(
                         fontSize: screenSize.width * 0.07,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        // Use primary text color from theme (likely white/light on gradient)
+                        color: Colors.white, // Keep white for gradient contrast
                         shadows: [
                           Shadow(
                               blurRadius: 3.0,
                               color: Colors.black.withOpacity(0.3),
-                              offset: Offset(1, 1))
+                              offset: const Offset(1, 1))
                         ],
                       ),
                     ),
                     SizedBox(height: screenSize.height * 0.01),
                     Text(
-                      "Choose the type of calculation",
+                      "Choose the type of calculation", // Consider translating
                       style: TextStyle(
                           fontSize: screenSize.width * 0.045,
-                          color: Colors.white70),
+                          // Use secondary text color (likely white70/light grey on gradient)
+                          color: Colors
+                              .white70), // Keep white70 for gradient contrast
                     ),
                   ],
                 ),
               ),
+              // Grid Section
               Expanded(
                 flex: 4,
                 child: Padding(
@@ -194,13 +251,13 @@ class _HomePageState extends State<HomePage> {
                       crossAxisCount: 2,
                       mainAxisSpacing: screenSize.height * 0.02,
                       crossAxisSpacing: screenSize.width * 0.04,
-                      childAspectRatio: 1.0,
+                      childAspectRatio: 1.0, // Adjust aspect ratio if needed
                     ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       return _buildGridButton(
                         context,
-                        items[index]['icon'],
+                        // items[index]['icon'], // Icon data is not used in the button anymore
                         items[index]['label'],
                         items[index]['page'],
                         items[index]['asset'],
@@ -209,7 +266,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 20), // Add some bottom padding
             ],
           ),
         ),
@@ -217,31 +274,41 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Helper widget for top bar buttons (Competitions, Theme Toggle, Student Data)
   Widget _buildTopBarButton(BuildContext context,
       {required IconData icon,
       String? label,
       required Function() onTap,
       bool isCircle = false}) {
+    final theme = Theme.of(context);
+    // Use surface color for button background, onSurface for icon/text
+    final backgroundColor = theme.colorScheme.surface.withOpacity(0.8);
+    final foregroundColor = theme.colorScheme.onSurface.withOpacity(0.8);
+
     return Material(
-      color: Colors.white.withOpacity(0.8),
+      color: backgroundColor,
       borderRadius: BorderRadius.circular(isCircle ? 25 : 15),
+      elevation: 2, // Add slight elevation
+      shadowColor: Colors.black.withOpacity(0.2),
       child: InkWell(
         borderRadius: BorderRadius.circular(isCircle ? 25 : 15),
         onTap: onTap,
         child: Padding(
+          // Adjust padding based on whether it's circle or rectangle
           padding: EdgeInsets.symmetric(
-              horizontal: label != null ? 16.0 : 10.0, vertical: 10.0),
+              horizontal: label != null ? 16.0 : (isCircle ? 10.0 : 16.0),
+              vertical: 10.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Colors.blueGrey.shade700, size: 24),
+              Icon(icon, color: foregroundColor, size: 24),
               if (label != null)
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     label,
                     style: TextStyle(
-                        color: Colors.blueGrey.shade800,
+                        color: foregroundColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 14),
                   ),
@@ -253,14 +320,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGridButton(BuildContext context, IconData icon, String label,
-      Widget page, String assetPath) {
+  // Updated grid button widget using Theme
+  Widget _buildGridButton(
+      BuildContext context, String label, Widget page, String assetPath) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardTheme.color ?? theme.colorScheme.surface;
+    final textColor = theme.colorScheme.onSurface;
+    // Use primary color for the asset icon for better visibility in both modes
+    final assetColor = theme.colorScheme.primary;
+
     return Card(
-      elevation: 8,
-      shadowColor: Colors.black.withOpacity(0.4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      // Use cardTheme properties defined in AppThemes
+      // elevation: theme.cardTheme.elevation,
+      // shadowColor: theme.cardTheme.shadowColor,
+      // shape: theme.cardTheme.shape,
+      // color: cardColor, // Card color is handled by theme
       child: InkWell(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(20.0), // Match card shape
         onTap: () {
           Navigator.push(
               context, MaterialPageRoute(builder: (context) => page));
@@ -269,16 +345,23 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset(assetPath,
-                  height: 50, color: Colors.blueGrey.shade700),
+              Image.asset(
+                assetPath,
+                height: 50,
+                color: assetColor, // Use themed color
+              ),
               const SizedBox(height: 15),
-              Text(label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blueGrey.shade800)),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: textColor, // Use themed text color
+                ),
+              ),
             ],
           ),
         ),

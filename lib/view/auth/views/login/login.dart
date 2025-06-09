@@ -1,31 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'package:neuro_math/view/home/home_page.dart'; // Keep for student navigation
-// Keep for student navigation
-// Removed AdminScreen import
-// Removed ExamPage import as it seems like a test route
-
-// Consider moving MaterialApp setup to main.dart for better structure
-// class Login extends StatelessWidget {
-//   const Login({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       title: 'Login Demo',
-//       initialRoute: '/',
-//       routes: {
-//         '/': (context) => const LoginScreen(),
-//         // Removed '/admin' route
-//         '/multi': (context) => const Multiplied(),
-//         // Removed '/exam' route
-//         '/main': (context) => const HomePage(),
-//       },
-//     );
-//   }
-// }
+import 'package:neuro_math/core/theme/app_themes.dart'; // Import AppThemes for gradient
+import 'package:neuro_math/view/home/home_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,10 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // Removed role selection variables
-  // String selectedRole = 'student';
-  // final List<String> roles = ['admin', 'student'];
-
   // Hashing function (keep for potential future use)
   String _hashPassword(String password) {
     var bytes = utf8.encode(password);
@@ -55,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showErrorMessage(String message) {
     if (!mounted) return; // Check if the widget is still in the tree
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+      SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error),
     );
   }
 
@@ -76,8 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Simplified student login check (placeholder)
       if (username == "student" &&
           hashedPassword == _hashPassword("student123")) {
-        // Navigate to the appropriate student page (e.g., HomePage or Multiplied based on logic)
-        // For now, let's default to HomePage
+        // Navigate to the appropriate student page (e.g., HomePage)
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -106,13 +80,17 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    // Access gradient colors from theme extension
+    final gradients = theme.extension<AppGradients>()!;
 
     return Scaffold(
       body: Container(
-        // Modern Gradient Background
+        // Use Gradient from Theme
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade200, Colors.purple.shade300],
+            colors: [gradients.start, gradients.end],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -123,38 +101,38 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // App Logo Placeholder (Optional)
-                // Image.asset('assets/logo.png', height: 100),
-                // const SizedBox(height: 20),
-
-                // Welcome Text
+                // Welcome Text - Use white for contrast on gradient
                 Text(
                   "مرحباً بعودتك!",
                   style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.white, // Keep white for gradient contrast
                       shadows: [
                         Shadow(
                             blurRadius: 5.0,
                             color: Colors.black.withOpacity(0.3),
-                            offset: Offset(2, 2))
+                            offset: const Offset(2, 2))
                       ]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
                 Text(
                   "سجل الدخول للمتابعة",
-                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                  style: TextStyle(
+                      fontSize: 18,
+                      color:
+                          Colors.white70), // Keep white70 for gradient contrast
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
 
-                // Login Form Container
+                // Login Form Container - Use theme surface color
                 Container(
                   padding: const EdgeInsets.all(25.0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: colorScheme.surface
+                        .withOpacity(0.9), // Use surface color
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -168,16 +146,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Username Field
+                        // Username Field - Use theme input decoration
                         TextFormField(
                           controller: _usernameController,
                           keyboardType: TextInputType.text,
+                          style: TextStyle(
+                              color: colorScheme.onSurface), // Text color
                           decoration: InputDecoration(
                             labelText: "اسم المستخدم",
+                            labelStyle: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.7)),
                             prefixIcon: Icon(Icons.person_outline,
-                                color: Colors.grey.shade600),
+                                color: colorScheme.onSurface.withOpacity(0.6)),
+                            // Use fillColor from theme in dark mode, slightly off-white in light
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor: theme.brightness == Brightness.dark
+                                ? colorScheme
+                                    .surfaceContainerHighest // Use a variant in dark mode
+                                : Colors.grey
+                                    .shade100, // Keep light grey for light mode
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide.none,
@@ -185,29 +172,36 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide(
-                                  color: Colors.blue.shade700, width: 2),
+                                  color: colorScheme.primary, width: 2),
                             ),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "الرجاء إدخال اسم المستخدم";
                             }
-                            // Add other specific validations if needed
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
 
-                        // Password Field
+                        // Password Field - Use theme input decoration
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
+                          style: TextStyle(
+                              color: colorScheme.onSurface), // Text color
                           decoration: InputDecoration(
                             labelText: "كلمة المرور",
+                            labelStyle: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.7)),
                             prefixIcon: Icon(Icons.lock_outline,
-                                color: Colors.grey.shade600),
+                                color: colorScheme.onSurface.withOpacity(0.6)),
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor: theme.brightness == Brightness.dark
+                                ? colorScheme
+                                    .surfaceContainerHighest // Use a variant in dark mode
+                                : Colors.grey
+                                    .shade100, // Keep light grey for light mode
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide.none,
@@ -215,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide(
-                                  color: Colors.blue.shade700, width: 2),
+                                  color: colorScheme.primary, width: 2),
                             ),
                           ),
                           validator: (value) {
@@ -229,14 +223,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Login Button
+                        // Login Button - Use theme button style
                         _isLoading
-                            ? const CircularProgressIndicator()
+                            ? CircularProgressIndicator(
+                                color: colorScheme.primary)
                             : ElevatedButton(
                                 onPressed: _login,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue.shade700,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor:
+                                      colorScheme.primary, // Use primary color
+                                  foregroundColor: colorScheme
+                                      .onPrimary, // Use onPrimary color
                                   minimumSize: Size(screenSize.width * 0.6, 50),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import 'package:neuro_math/core/theme/app_themes.dart'; // Import AppThemes for gradient
 
 class Divided extends StatefulWidget {
   const Divided({super.key});
@@ -22,13 +23,6 @@ class _DividedState extends State<Divided> {
 
   int correctAnswers = 0;
   int wrongAnswers = 0;
-
-  // Define exact colors from reference image (approximated)
-  final Color backspaceButtonColor = const Color(0xFFF87070); // Coral red
-  final Color checkButtonColor = const Color(0xFF63C9A8); // Teal green
-  final Color keypadTextColor = Colors.grey.shade800; // Darker grey
-  final Color gradientStartColor = const Color(0xFF6A82FB); // Adjusted blue
-  final Color gradientEndColor = const Color(0xFFB477F8); // Adjusted purple
 
   @override
   void initState() {
@@ -112,12 +106,14 @@ class _DividedState extends State<Divided> {
     }
   }
 
-  // Using the redesigned result dialog
+  // Updated result dialog using Theme
   void showResultDialog() {
     if (!mounted) return;
     countdownTimer?.cancel();
     int totalQuestions = correctAnswers + wrongAnswers;
     int score = correctAnswers;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showDialog(
       context: context,
@@ -127,41 +123,47 @@ class _DividedState extends State<Divided> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: theme.dialogBackgroundColor,
           title: Center(
             child: Text(
               "النتيجة النهائية",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildResultRow("الإجابات الصحيحة:", correctAnswers.toString(), Colors.green.shade600),
-              _buildResultRow("الإجابات الخاطئة:", wrongAnswers.toString(), Colors.red.shade600),
-              _buildResultRow("المسائل المحلولة:", totalQuestions.toString(), Colors.black87),
+              _buildResultRow("الإجابات الصحيحة:", correctAnswers.toString(),
+                  Colors.green.shade600),
+              _buildResultRow("الإجابات الخاطئة:", wrongAnswers.toString(),
+                  colorScheme.error),
+              _buildResultRow("المسائل المحلولة:", totalQuestions.toString(),
+                  colorScheme.onSurfaceVariant),
               const Divider(height: 20, thickness: 1),
-              _buildResultRow("الدرجة:", score.toString(), gradientEndColor, isScore: true),
+              _buildResultRow("الدرجة:", score.toString(), colorScheme.primary,
+                  isScore: true),
             ],
           ),
           actionsAlignment: MainAxisAlignment.center,
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: gradientEndColor,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 35, vertical: 12),
               ),
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.pop(context);
               },
-              child: const Text("حسناً", style: TextStyle(fontSize: 16, color: Colors.white)),
+              child: const Text("حسناً", style: TextStyle(fontSize: 16)),
             ),
           ],
         );
@@ -169,7 +171,10 @@ class _DividedState extends State<Divided> {
     );
   }
 
-  Widget _buildResultRow(String label, String value, Color valueColor, {bool isScore = false}) {
+  Widget _buildResultRow(String label, String value, Color valueColor,
+      {bool isScore = false}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -179,7 +184,7 @@ class _DividedState extends State<Divided> {
             label,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[700],
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           Text(
@@ -195,46 +200,46 @@ class _DividedState extends State<Divided> {
     );
   }
 
-  // Using the redesigned number button
-  Widget buildNumberButton(String number, {Color? buttonColor, Color? textColor, IconData? icon, Function()? onTap}) {
-    Color bgColor = Colors.white;
-    Color fgColor = keypadTextColor;
-    IconData? btnIcon;
+  // Updated Button Builder using Theme
+  Widget buildKeypadButton(String text,
+      {IconData? icon, Function()? onTap, Color? bgColor, Color? fgColor}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    // Default background/foreground based on theme, but allow overrides
+    Color buttonColor = bgColor ??
+        (theme.brightness == Brightness.dark
+            ? colorScheme.surfaceContainerHighest
+            : Colors.white);
+    Color textColor = fgColor ?? colorScheme.onSurface;
+    Widget child;
 
-    if (icon == Icons.backspace_outlined) {
-      bgColor = backspaceButtonColor;
-      fgColor = Colors.white;
-      btnIcon = Icons.arrow_back;
-    } else if (icon == Icons.check) {
-      bgColor = checkButtonColor;
-      fgColor = Colors.white;
-      btnIcon = Icons.check;
-    } else if (buttonColor != null) {
-      bgColor = buttonColor;
-    }
-
-    if (textColor != null) {
-      fgColor = textColor;
+    if (icon != null) {
+      child = Icon(icon, color: textColor, size: 26);
+    } else {
+      child = Text(
+        text,
+        style: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      );
     }
 
     return InkWell(
-      onTap: onTap ?? () {
-        // Optimize button press response time by removing setState delay
-        if (answer.length < 6) {
-          setState(() {
-            answer += number;
-          });
-        }
-      },
+      onTap: onTap,
       borderRadius: BorderRadius.circular(18.0),
       child: Container(
         margin: const EdgeInsets.all(4.0),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: buttonColor,
           borderRadius: BorderRadius.circular(18.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
+              // Use a darker shadow in light mode for the white panel
+              color: theme.brightness == Brightness.light
+                  ? Colors.grey.withOpacity(0.15)
+                  : Colors.black.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 3),
@@ -242,16 +247,7 @@ class _DividedState extends State<Divided> {
           ],
         ),
         alignment: Alignment.center,
-        child: btnIcon != null
-            ? Icon(btnIcon, color: fgColor, size: 26)
-            : Text(
-                number,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
-                  color: fgColor,
-                ),
-              ),
+        child: child,
       ),
     );
   }
@@ -260,22 +256,43 @@ class _DividedState extends State<Divided> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final safeAreaPadding = MediaQuery.of(context).padding;
-    
-    // Adjust flex ratio to raise number pad
-    final questionAreaFlex = 2; // Reduced from 3 to 2
-    final keypadAreaFlex = 5; // Increased from 4 to 5
-    
-    // Calculate aspect ratio for keypad buttons
-    double keypadAspectRatio = (screenSize.width / 3) / (screenSize.height * 0.1);
-    double topSectionHeight = screenSize.height * 0.3; // Reduced from 0.4 to 0.3
-    double keypadAvailableHeight = screenSize.height - topSectionHeight - safeAreaPadding.top - safeAreaPadding.bottom - 20;
-    keypadAspectRatio = (screenSize.width / 3) / (keypadAvailableHeight / 4);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final gradients = theme.extension<AppGradients>()!;
+
+    final questionAreaFlex = 2;
+    final keypadAreaFlex = 5;
+
+    double topSectionHeight = screenSize.height * 0.3;
+    double keypadAvailableHeight = screenSize.height -
+        topSectionHeight -
+        safeAreaPadding.top -
+        safeAreaPadding.bottom -
+        20;
+    double keypadAspectRatio =
+        (screenSize.width / 3) / (keypadAvailableHeight / 4);
+    if (keypadAspectRatio <= 0) keypadAspectRatio = 1.0;
+
+    // Define button colors from theme
+    final backspaceButtonBgColor = colorScheme.errorContainer;
+    final backspaceButtonFgColor = colorScheme.onErrorContainer;
+    final checkButtonBgColor = colorScheme.primaryContainer;
+    final checkButtonFgColor = colorScheme.onPrimaryContainer;
+    // Use white for number buttons in light mode, surfaceVariant in dark mode
+    final numberButtonBgColor = theme.brightness == Brightness.light
+        ? Colors.white
+        : colorScheme.surfaceContainerHighest;
+    final numberButtonFgColor = colorScheme.onSurfaceVariant;
+    // Define colors for timer and close icon (always white for contrast on gradient)
+    const Color topIconColor = Colors.white;
+    const Color timerTextColor = Colors.white;
+    const Color problemTextColor = Colors.white;
 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [gradientStartColor, gradientEndColor],
+            colors: [gradients.start, gradients.end],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -300,36 +317,40 @@ class _DividedState extends State<Divided> {
                     // Top Bar (Timer and Close Button)
                     Padding(
                       padding: EdgeInsets.only(
-                        top: safeAreaPadding.top + 10, // Reduced from 15 to 10
+                        top: safeAreaPadding.top + 10,
                         left: 25,
                         right: 25,
-                        bottom: 10, // Reduced from 15 to 10
+                        bottom: 10,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Timer
                           SizedBox(
-                            width: 55, height: 55,
+                            width: 55,
+                            height: 55,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
                                 CircularProgressIndicator(
                                   value: 1.0,
                                   strokeWidth: 6,
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: timerTextColor.withOpacity(
+                                      0.2), // Use white with opacity
                                 ),
                                 CircularProgressIndicator(
                                   value: totalTime / 60,
                                   strokeWidth: 6,
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                          timerTextColor), // Use white
                                 ),
                                 Text(
                                   "$totalTime",
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: timerTextColor, // Use white
                                   ),
                                 ),
                               ],
@@ -344,10 +365,12 @@ class _DividedState extends State<Divided> {
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: topIconColor.withOpacity(
+                                    0.25), // Use white with opacity
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 26),
+                              child: const Icon(Icons.close,
+                                  color: topIconColor, size: 26), // Use white
                             ),
                           ),
                         ],
@@ -355,7 +378,7 @@ class _DividedState extends State<Divided> {
                     ),
                     // Question Area
                     Expanded(
-                      flex: questionAreaFlex, // Reduced flex to make room for keypad
+                      flex: questionAreaFlex,
                       child: Container(
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -365,32 +388,35 @@ class _DividedState extends State<Divided> {
                             Text(
                               "$num1 $operation $num2", // Display division question
                               style: TextStyle(
-                                fontSize: screenSize.width * 0.13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [Shadow(blurRadius: 1, color: Colors.black.withOpacity(0.15), offset: Offset(1,1))]
-                              ),
+                                  fontSize: screenSize.width * 0.13,
+                                  fontWeight: FontWeight.bold,
+                                  color: problemTextColor, // Use white
+                                  shadows: [
+                                    Shadow(
+                                        blurRadius: 1,
+                                        color: Colors.black.withOpacity(0.15),
+                                        offset: Offset(1, 1))
+                                  ]),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 15), // Reduced from 20 to 15
+                            const SizedBox(height: 15),
                             // Container for the line and answer
                             Container(
-                              constraints: BoxConstraints(maxWidth: screenSize.width * 0.5),
+                              constraints: BoxConstraints(
+                                  maxWidth: screenSize.width * 0.5),
                               child: Column(
                                 children: [
-                                  // Line only
                                   Container(
-                                    height: 1.5, // Line thickness
+                                    height: 1.5,
                                     color: Colors.white.withOpacity(0.9),
                                   ),
-                                  const SizedBox(height: 10), // Space between line and answer
-                                  // Answer below the line
+                                  const SizedBox(height: 10),
                                   Text(
                                     answer.isEmpty ? " " : answer,
                                     style: TextStyle(
                                       fontSize: screenSize.width * 0.1,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: problemTextColor, // Use white
                                       letterSpacing: 3,
                                     ),
                                     textAlign: TextAlign.center,
@@ -402,18 +428,29 @@ class _DividedState extends State<Divided> {
                         ),
                       ),
                     ),
-                    // Keypad Area
+                    // Keypad Area - Restore white background panel
                     Expanded(
-                      flex: keypadAreaFlex, // Increased flex to make keypad taller
+                      flex: keypadAreaFlex,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Reduced vertical padding from 15 to 10
-                        decoration: const BoxDecoration(
-                           color: Colors.white,
-                           borderRadius: BorderRadius.only(
-                             topLeft: Radius.circular(35),
-                             topRight: Radius.circular(35),
-                           ),
-                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                            // Use white in light mode, dark surface in dark mode
+                            color: theme.brightness == Brightness.light
+                                ? Colors.white
+                                : colorScheme.surface,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(35),
+                              topRight: Radius.circular(35),
+                            ),
+                            boxShadow: [
+                              // Keep shadow for separation
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, -5),
+                              )
+                            ]),
                         child: GridView.count(
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
@@ -421,21 +458,32 @@ class _DividedState extends State<Divided> {
                           childAspectRatio: keypadAspectRatio,
                           mainAxisSpacing: 10,
                           crossAxisSpacing: 10,
-                          padding: const EdgeInsets.all(10), // Reduced padding from 15 to 10
+                          padding: const EdgeInsets.all(10),
                           children: [
                             ...List.generate(9, (index) {
-                              return buildNumberButton("${index + 1}");
+                              return buildKeypadButton("${index + 1}",
+                                  onTap: () =>
+                                      setState(() => answer += "${index + 1}"),
+                                  bgColor: numberButtonBgColor,
+                                  fgColor: numberButtonFgColor);
                             }),
-                            buildNumberButton(
+                            buildKeypadButton(
                               "",
                               icon: Icons.backspace_outlined,
                               onTap: deleteLastDigit,
+                              bgColor: backspaceButtonBgColor,
+                              fgColor: backspaceButtonFgColor,
                             ),
-                            buildNumberButton("0"),
-                            buildNumberButton(
+                            buildKeypadButton("0",
+                                onTap: () => setState(() => answer += "0"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton(
                               "",
                               icon: Icons.check,
                               onTap: checkAnswer,
+                              bgColor: Colors.green,
+                              fgColor: checkButtonFgColor,
                             ),
                           ],
                         ),

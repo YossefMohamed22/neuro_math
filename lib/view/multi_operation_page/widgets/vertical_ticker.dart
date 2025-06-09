@@ -51,6 +51,13 @@ class _VerticalTickerState extends State<VerticalTicker> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // Use white text in dark mode, black in light mode
+    final Color textColor = isDarkMode ? Colors.white : Colors.black;
+    final Color dividerColor = isDarkMode ? Colors.white : Colors.black;
+    
     if (_controller.isDismissed) return const SizedBox();
     return ClipRect(
       child: SizedBox(
@@ -72,8 +79,8 @@ class _VerticalTickerState extends State<VerticalTicker> with SingleTickerProvid
                   child: Center(
                     child: Text(
                       widget.logic.userSelectNumbers[index].toString(),
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: textColor, // Use dynamic text color based on theme
                         fontSize: 35,
                         fontWeight: FontWeight.w600,
                       ),
@@ -82,9 +89,9 @@ class _VerticalTickerState extends State<VerticalTicker> with SingleTickerProvid
                 );
               }),
               SizedBox(height: 10,),
-              const Divider(
+              Divider(
                 thickness: 3,
-                color: Colors.black,
+                color: dividerColor, // Use dynamic divider color based on theme
                 height: 0,
                 endIndent: 100,
                 indent: 100,
