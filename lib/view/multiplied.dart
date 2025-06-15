@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:neuro_math/core/theme/app_themes.dart'; // Import AppThemes for gradient
+import 'package:neuro_math/core/theme/app_themes.dart';
 
 class Multiplied extends StatefulWidget {
   const Multiplied({super.key});
@@ -257,9 +257,8 @@ class _MultipliedState extends State<Multiplied> {
     final colorScheme = theme.colorScheme;
     final gradients = theme.extension<AppGradients>()!;
 
-    final questionAreaFlex = 2;
-    final keypadAreaFlex = 5;
-
+    final questionAreaFlex = 3;
+    final keypadAreaFlex = 4;
     double topSectionHeight = screenSize.height * 0.3;
     double keypadAvailableHeight = screenSize.height -
         topSectionHeight -
@@ -441,7 +440,6 @@ class _MultipliedState extends State<Multiplied> {
                               topRight: Radius.circular(35),
                             ),
                             boxShadow: [
-                              // Keep shadow for separation
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
                                 blurRadius: 10,
@@ -452,36 +450,58 @@ class _MultipliedState extends State<Multiplied> {
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
                           crossAxisCount: 3,
-                          childAspectRatio: keypadAspectRatio,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          padding: const EdgeInsets.all(10),
+                          childAspectRatio: 1.3,
                           children: [
-                            ...List.generate(9, (index) {
-                              return buildKeypadButton("${index + 1}",
-                                  onTap: () =>
-                                      setState(() => answer += "${index + 1}"),
-                                  bgColor: numberButtonBgColor,
-                                  fgColor: numberButtonFgColor);
-                            }),
-                            buildKeypadButton(
-                              "",
-                              icon: Icons.backspace_outlined,
-                              onTap: deleteLastDigit,
-                              bgColor: backspaceButtonBgColor,
-                              fgColor: backspaceButtonFgColor,
-                            ),
+                            buildKeypadButton("1",
+                                onTap: () => setState(() => answer += "1"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("2",
+                                onTap: () => setState(() => answer += "2"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("3",
+                                onTap: () => setState(() => answer += "3"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("4",
+                                onTap: () => setState(() => answer += "4"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("5",
+                                onTap: () => setState(() => answer += "5"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("6",
+                                onTap: () => setState(() => answer += "6"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("7",
+                                onTap: () => setState(() => answer += "7"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("8",
+                                onTap: () => setState(() => answer += "8"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("9",
+                                onTap: () => setState(() => answer += "9"),
+                                bgColor: numberButtonBgColor,
+                                fgColor: numberButtonFgColor),
+                            buildKeypadButton("",
+                                icon: Icons.backspace_outlined,
+                                onTap: deleteLastDigit,
+                                bgColor: backspaceButtonBgColor,
+                                fgColor: backspaceButtonFgColor),
                             buildKeypadButton("0",
                                 onTap: () => setState(() => answer += "0"),
                                 bgColor: numberButtonBgColor,
                                 fgColor: numberButtonFgColor),
-                            buildKeypadButton(
-                              "",
-                              icon: Icons.check,
-                              onTap: checkAnswer,
-                              bgColor: Colors.green,
-                              fgColor: checkButtonFgColor,
-                            ),
+                            buildKeypadButton("",
+                                icon: Icons.check,
+                                onTap: checkAnswer,
+                                bgColor: checkButtonBgColor,
+                                fgColor: checkButtonFgColor),
                           ],
                         ),
                       ),

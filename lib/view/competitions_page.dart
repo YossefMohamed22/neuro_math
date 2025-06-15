@@ -21,7 +21,6 @@ class CompetitionsPage extends StatelessWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              // Back Button (similar to close button style)
               Positioned(
                 top: 20,
                 left: 20,
@@ -36,7 +35,8 @@ class CompetitionsPage extends StatelessWidget {
                       color: Colors.white.withOpacity(0.25),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20), // Back icon
+                    child: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 20), // Back icon
                   ),
                 ),
               ),
@@ -59,4 +59,3 @@ class CompetitionsPage extends StatelessWidget {
     );
   }
 }
-

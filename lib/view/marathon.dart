@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:neuro_math/core/theme/app_themes.dart'; // Import AppThemes for gradient
+import 'package:neuro_math/core/theme/app_themes.dart';
 
 class Marathon extends StatefulWidget {
   const Marathon({super.key});
