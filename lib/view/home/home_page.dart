@@ -6,12 +6,10 @@ import 'package:neuro_math/view/competitions_page.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:neuro_math/core/theme/app_themes.dart';
 import 'package:neuro_math/core/theme/theme_cubit.dart';
 import 'package:neuro_math/view/home/home_logic.dart';
 import 'package:neuro_math/view/multi_operation_page/multi_operations_page.dart';
-
 import '../divided.dart';
 import '../marathon.dart';
 import '../multiplied.dart';
@@ -26,7 +24,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   File? _imageFile;
   final HomeLogic logic = HomeLogic();
-  String studentName = "أحمد"; // Example Name - TODO: Replace with actual data
+  String studentName =
+      "Yossef"; // Example Name - TODO: Replace with actual data
 
   @override
   void initState() {
