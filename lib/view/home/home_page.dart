@@ -190,25 +190,64 @@ class _HomePageState extends State<HomePage> {
                       onTap: _pickImage,
                       child: CircleAvatar(
                         radius: screenSize.width * 0.15,
-                        // Use theme surface color with opacity for background
                         backgroundColor:
                             theme.colorScheme.surface.withOpacity(0.8),
-                        backgroundImage: _imageFile != null
-                            ? FileImage(_imageFile!)
-                            : const AssetImage(
-                                    'assets/login-avatar_12123009.png')
-                                as ImageProvider,
-                        child: _imageFile == null
-                            ? Icon(
-                                Icons.camera_alt,
-                                size: screenSize.width * 0.1,
-                                // Use a less prominent color from theme
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.5),
+                        child: _imageFile != null
+                            ? ClipOval(
+                                child: SizedBox(
+                                  width: screenSize.width * 0.28,
+                                  height: screenSize.width * 0.28,
+                                  child: Image.file(
+                                    _imageFile!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               )
-                            : null,
+                            : Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipOval(
+                                    child: SizedBox(
+                                      width: screenSize.width * 0.25,
+                                      height: screenSize.width * 0.25,
+                                      child: Image.asset(
+                                        'assets/login-avatar_128.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: screenSize.width * 0.1,
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.5),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
+                    // GestureDetector(
+                    //   onTap: _pickImage,
+                    //   child: CircleAvatar(
+                    //     radius: screenSize.width * 0.15,
+                    //     // Use theme surface color with opacity for background
+                    //     backgroundColor:
+                    //         theme.colorScheme.surface.withOpacity(0.8),
+                    //     backgroundImage: _imageFile != null
+                    //         ? FileImage(_imageFile!)
+                    //         : const AssetImage('assets/login-avatar_128.png')
+                    //             as ImageProvider,
+                    //     child: _imageFile == null
+                    //         ? Icon(
+                    //             Icons.camera_alt,
+                    //             size: screenSize.width * 0.1,
+                    //             // Use a less prominent color from theme
+                    //             color: theme.colorScheme.onSurface
+                    //                 .withOpacity(0.5),
+                    //           )
+                    //         : null,
+                    //   ),
+                    // ),
                     SizedBox(height: screenSize.height * 0.02),
                     Text(
                       "Hi, $studentName",
