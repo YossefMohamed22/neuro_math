@@ -1,0 +1,2 @@
+C:/Users/Toshiba/Desktop/New folder (2)/home/ubuntu/uth_math_project/uth_math-main/android/app/.cxx/RelWithDebInfo/s3n3o214/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/Toshiba/Desktop/New folder (2)/home/ubuntu/uth_math_project/uth_math-main/android/app/.cxx/RelWithDebInfo/s3n3o214/x86_64/CMakeFiles/rebuild_cache.dir
