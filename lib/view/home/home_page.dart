@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
       {
         'icon': Icons.calculate,
         'label': 'جمع وطرح',
-        'page': const Marathon(),
+        'page': const MultiOperationsPage(),
         'asset': 'assets/plus-minus.png'
       },
       {
@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
       {
         'icon': Icons.functions,
         'label': 'متعدد',
-        'page': const MultiOperationsPage(),
+        'page': const Marathon(),
         'asset': 'assets/math.png'
       },
     ];
